@@ -1,3 +1,10 @@
+Roles - 
+
+Rohan and JB - Data cleaning, missing values treatment, transformations
+Kennan and JB - Lasso regression, random forest and k-fold cross validation
+
+----------------------------------------------------------------------------------------------------------------------------------
+
 Who might care about this problem and why?
 
 Ability to predict and forecast insurance claims is an important business requirement for insurance firms. Insurance claim prediction models can help actuaries better evaluate risks associated with insurance products. 
