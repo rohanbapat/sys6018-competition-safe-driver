@@ -60,9 +60,12 @@ cor_combined_df_demo1 <- cor(combined_df_demo1)
 cor_combined_df_demo1 <- as.data.frame(cor_combined_df_demo1)
 cor_combined_df_demo1$corr_column <- rownames(cor_combined_df_demo1)
 cor_combined_df_demo2 <- cor_combined_df_demo1 %>% gather(varname, corr, id:ps_calc_20_bin)
+rm(combined_df_demo1)
 
-# Check orrelated variables
+# Check correlated variables
 cor_combined_df_demo2[(cor_combined_df_demo2$corr>0.75)&(cor_combined_df_demo2$corr<1),]
+rm(cor_combined_df_demo2)
+
 
 #  ps_ind_14 and ps_ind_12_bin are correlated. Remove one variable
 combined_df <- subset(combined_df, select = -c(ps_ind_14))
@@ -139,7 +142,7 @@ long_formula <- as.formula(sprintf("target ~ (%s)^2", terms_init)) # create form
 # Fit lasso logistic regression  ----------------------------------------
 
 library(glmnet)
-# Cross-validate lasso regression to find optimal lambda value
+# Cross-validate (K-Fold) lasso regression to find optimal lambda value
 y <- downsampled_full$target # create vector of target 
 x <- model.matrix(long_formula, downsampled_full)[,-1] # create model matrix
 set.seed(123) # set seed
@@ -150,10 +153,10 @@ cv.logistic.lasso$lambda.min # extract minimum lambda: 0.00368678
 # Make predictions on test set
 test_ids <- test_master$id # extract ids to identify test set rows
 x_test <- model.matrix(long_formula, combined_df[(combined_df$id %in% test_ids),])[,-1] # create model matrix
-preds <- predict(cv.logistic.lasso$glmnet.fit, s = 0.00368678, newx = x_test, type = "response") # make predictions using lambda value chosen with cross-validation
+preds <- predict(cv.logistic.lasso$glmnet.fit, s = 0.00368678, newx = x_test, type = "response") # make predictions using lambda value chosen with K-fold (K = 10) cross-validation
 
 # create tibble for output
-test_ids <- as.integer(test_ids)
+test_ids <- as.integer(as.character(test_ids))
 output <- as_tibble(cbind(test_ids, preds)) # create tibble for export
 colnames(output) <- c("id","target") # rename tibble cols
 
@@ -193,10 +196,9 @@ params_and_mse %>%  # plot all
 rf1 <- randomForest(long_formula, data = downsampled_full, mtry = 3, importance = TRUE, ntree = 5000)
 
 # Make predictions on test set and export to csv
-preds.rf = predict(rf1,newdata=combined_df[(combined_df$id %in% test_ids),], type = "prob")
+preds.rf = predict(rf1,newdata=combined_df[(combined_df$id %in% test_ids),], type = "prob")[,2]
 
 # create tibble for output
-test_ids <- as.integer(test_ids)
 output <- as_tibble(cbind(test_ids, preds.rf))
 colnames(output) <- c("id","target") # rename cols
 
