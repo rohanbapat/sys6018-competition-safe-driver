@@ -1,6 +1,7 @@
 Roles - 
 
 Rohan and JB - Data cleaning, missing values treatment, transformations
+
 Kennan and JB - Lasso regression, random forest and k-fold cross validation
 
 ----------------------------------------------------------------------------------------------------------------------------------
