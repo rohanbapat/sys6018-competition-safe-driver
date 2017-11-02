@@ -122,7 +122,17 @@ colnames(output) <- c("id","target") # rename cols
 write_csv(output, path = "khg3je_logistic.csv")
 
 
-
-
 # Build random forest
-rf1 <- randomForest(target~., data = combined_df, importance = TRUE, ntree = 100)
+rf1 <- randomForest(target~., data = downsampled_train, mtry = 5, importance = TRUE, ntree = 1000)
+
+# Make predictions on test set and export to csv
+preds.rf = predict(rf1,newdata=combined_df[(combined_df$id %in% test_ids),], type = "prob")
+
+# create tibble for output
+test_ids <- as.integer(test_ids)
+output <- as_tibble(cbind(test_ids, preds.rf))
+colnames(output) <- c("id","target") # rename cols
+
+# write final output to file
+write_csv(output, path = "khg3je_rf.csv")
+
