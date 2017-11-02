@@ -64,5 +64,43 @@ train_master$target <- as.factor(train_master$target)
 # Drop ps_car_11_cat
 train_master <- subset(train_master, select = -c(ps_car_11_cat))
 
+
+# Do variable selection for logistic regression ---------------------------
+
+# create null and full models for stepwise variable selection
+
+# null model
+null=glm(target ~ 1, data = train_master, family=binomial(link="logit"))
+null
+
+# create formula for full term set:
+#
+col_names <- c("ps_car_13","ps_car_06_cat","ps_reg_03","ps_car_14","ps_calc_10","ps_calc_14","ps_ind_15","ps_car_01_cat","ps_ind_03","ps_calc_11") 
+# combine into formula
+terms_init <-  paste(col_names, collapse="+")
+long_formula <- as.formula(sprintf("target ~ (%s)^2", terms_init))
+
+# full model:
+full=glm(formula = long_formula, data = training_set, family=binomial(link="logit"))
+full
+
+
+# fit step-wise
+my_step <- step(null, scope=list(lower=null, upper=full), direction="both")
+# my_step <- step(full, direction="backward")
+summary(my_step)
+anova(my_step)
+
+# make predictions on validation set
+preds_init <- predict(my_step, newdata = final_validation_set)
+# use predictions of change to make actual prediction values
+preds_final <- final_validation_set$PRICE*(1 + preds_init)
+
+# calculate MSE
+n <- length(final_validation_set$DATE)
+MSE_lm <- sum((preds_final - final_validation_set$NextDayPrice)^2)/n
+MSE_lm
+# 1.637032
+
 # Build random forest
 rf1 <- randomForest(target~., data = train_master, importance = TRUE, ntree = 100)
